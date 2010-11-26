@@ -1,6 +1,6 @@
 = dflat
 
-Description goes here.
+Ruby implementation of Dflat
 
 == Contributing to dflat
  
