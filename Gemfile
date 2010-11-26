@@ -5,6 +5,8 @@ source "http://rubygems.org"
 
 gem "namaste"
 gem "anvl"
+gem "lockit"
+gem "i18n"
 
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.

@@ -1,9 +1,13 @@
 require 'namaste'
-# require 'lockit'
+require 'lockit'
 require 'anvl'
+require 'dnatural'
 
 module Dflat
   class Home # < ::Dir
+    include Namaste::Mixin
+    include LockIt::Mixin
+
     DEFAULT_PROPERTIES = { :objectScheme => 'Dflat/0.19', 
                            :manifestScheme => 'Checkm/0.1',
 			   :fullScheme => 'Dnatural/0.19',
@@ -13,10 +17,9 @@ module Dflat
 
     def self.mkdir path, integer=0777, args = {}
       Dir.mkdir path, integer
-      d = Dir.new path
-      d.type = Dflat::VERSION
       d = Home.new path
-      d.current! 'v001'
+      d.type = Dflat::VERSION
+      d.version! 'v001', nil
       d.info = args[:info] || DEFAULT_PROPERTIES
       d
     end
@@ -44,40 +47,60 @@ module Dflat
       
     end 
 
-    def each v=nil, &block
-      version(v || current).each &block
-    end
-
     def current
-      version current_str
+      v = current_version
+      return nil unless v
+      version(v)
     end
 
     def version version
       # xxx use namaste 'type' to load the right dir..
-      Dir.new File.join(path, version)
+      Dnatural::Dir.new File.join(path, version)
+    end
+
+    def version! dest = nil, src = nil
+      lock
+      dest ||= next_version
+      if src
+        FileUtils.cp_r File.join(path, src), File.join(path, dest)
+      else
+	if current_version
+          FileUtils.cp_r current.path, File.join(path, dest)
+	else
+          new_version(dest)
+	end
+      end
+
+      self.current = dest
+      unlock
+      return version(dest)
     end
 
     def current= version
       return false unless File.directory? File.join(path, version)
       File.open(File.join(path, 'current.txt'), 'w') { |f| f.write(version) }
-      version
+      @current = version
     end
-
-    def current! version, type=nil
-      # xxx  use namaste 'type' to create the right structure
-      d = Dir.mkdir File.join(path, version)
-      self.current=version
-      d
-    end
-
 
     def versions
-      ::Dir.glob(path, 'v*').map
+      ::Dir.glob(File.join(path, 'v*')).map
+    end
+
+    def select &block
+      d = Dir.new path
+      d.select &block
     end
     private
+    def new_version version
+      d = Dnatural::Dir.mkdir File.join(path, version)
+    end
 
-    def current_str
-      @current ||= open(File.join(path, 'current.txt')).read.strip
+    def current_version
+      @current ||= open(File.join(path, 'current.txt')).read.strip rescue nil
+    end
+
+    def next_version
+      "v%03d" % (self.versions.map { |x| File.basename(x).sub(/^v/, '').to_i }.max + 1)
     end
   end
 end
