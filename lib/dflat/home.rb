@@ -1,18 +1,27 @@
-# require 'namaste'
+require 'namaste'
 # require 'lockit'
-# require 'anvl'
+require 'anvl'
 
 module Dflat
   class Home # < ::Dir
+    DEFAULT_PROPERTIES = { :objectScheme => 'Dflat/0.19', 
+                           :manifestScheme => 'Checkm/0.1',
+			   :fullScheme => 'Dnatural/0.19',
+			   :deltaScheme => 'Dnatural/0.19',
+                           :currentScheme => 'file',
+			   :classScheme => 'CLOP/0.3' }
+
     def self.mkdir path, integer=0777, args = {}
-      d = Dir.mkdir path, integer
-      # namaste tag it!
+      Dir.mkdir path, integer
+      d = Dir.new path
+      d.type = Dflat::VERSION
       d = Home.new path
-      d.current! 'v000'
+      d.current! 'v001'
+      d.info = args[:info] || DEFAULT_PROPERTIES
       d
     end
 
-    attr_reader :path, :info
+    attr_reader :path
     def initialize path, args = {}
       @path = path
       @info = nil
@@ -20,7 +29,15 @@ module Dflat
 
     def info
       # xxx parse it with anvl
-      @info ||= open(File.join(path, 'dflat-info.txt')).read
+      return @info if @info
+      return @info = {} unless File.exists? File.join(path, 'dflat-info.txt')
+
+      anvl = open(File.join(path, 'dflat-info.txt')).read
+      @info = ANVL.parse anvl
+    end
+
+    def info=(properties = @info)
+      File.open(File.join(path, 'dflat-info.txt'), 'w') { |f| f.write(ANVL.to_anvl(properties)) }
     end
 
     def log
