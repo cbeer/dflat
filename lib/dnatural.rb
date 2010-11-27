@@ -1,3 +1,8 @@
+require 'checkm'
+require 'namaste'
+require 'fileutils'
+require 'lockit'
+
 module Dnatural
   VERSION = 'Dnatural/0.17'
   class Dir < ::Dir
@@ -19,8 +24,14 @@ module Dnatural
       d
     end
 
+    def version
+      File.basename(path)
+    end
+
     def manifest
-      @manifest ||= Checkm::Manifest.new open(File.join(path, 'manifest.txt')).read 
+      data = ''
+      data = open(File.join(path, 'manifest.txt')).read if File.exists? File.join(path, 'manifest.txt')
+      @manifest ||= Checkm::Manifest.new data
     end
 
     def manifest!
@@ -33,7 +44,7 @@ module Dnatural
     end
 
     def add src, dest, options = {}
-      FileUtils.cp src, File.join(path, dest), options
+      file = FileUtils.cp src, File.join(path, dest), options
 
       manifest!
 
@@ -44,6 +55,8 @@ module Dnatural
       end
 
       unlock
+
+      File.new File.join(path, dest)
     end
 
     def remove list, options = {}
@@ -54,7 +67,7 @@ module Dnatural
       lock
 
       list.each do |l|
-        m = m.remove l, :base => path
+        m = m.remove l
       end
 
       File.open(File.join(path, 'manifest.txt'), 'w') do |f|

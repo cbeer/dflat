@@ -28,11 +28,6 @@ class TestDflat < Test::Unit::TestCase
       assert_equal(open(File.join(@dflat.path, 'current.txt')).read, 'v001')
     end
 
-    should "do basic dnatural versioning" do
-      version = @dflat.version!
-      assert_equal(File.basename(version.path), 'v002')
-      assert_equal(open(File.join(@dflat.path, 'current.txt')).read, 'v002')
-    end
 
     should "have dflat info" do
       info = @dflat.info
@@ -47,5 +42,32 @@ class TestDflat < Test::Unit::TestCase
       assert_equal(info[:test], 'abcdef')
     end
 
+    should "add file to current version" do
+      file = @dflat.current.add 'LICENSE.txt', 'producer/abcdef'
+      lines = @dflat.current.manifest!.to_s.split "\n"
+      assert_equal(lines[0], '#%checkm_0.7')
+      assert_match(/producer\/abcdef/, lines[1])
+      assert_equal(@dflat.current.manifest.valid?, true)
+    end
+
+    should "remove file from current version" do
+      file = @dflat.current.add 'LICENSE.txt', 'producer/abcdef'
+      @dflat.current.remove 'producer/abcdef'
+      lines = @dflat.current.manifest!.to_s.split "\n"
+      assert_equal(lines.length, 1)
+      assert_equal(lines[0], '#%checkm_0.7')
+    end
+
+    should "do basic dnatural versioning" do
+      version = @dflat.version!
+
+      assert_equal(@dflat.current.version, 'v001')
+      assert_equal(open(File.join(@dflat.path, 'current.txt')).read, 'v001')
+
+      @dflat.current = version
+
+      assert_equal(File.basename(version.path), 'v002')
+      assert_equal(open(File.join(@dflat.path, 'current.txt')).read, 'v002')
+    end
   end
 end

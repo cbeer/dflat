@@ -6,6 +6,7 @@ source "http://rubygems.org"
 gem "namaste"
 gem "anvl"
 gem "lockit"
+gem "checkm"
 gem "i18n"
 
 # Add dependencies to develop your gem here.

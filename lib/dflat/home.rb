@@ -19,7 +19,7 @@ module Dflat
       Dir.mkdir path, integer
       d = Home.new path
       d.type = Dflat::VERSION
-      d.version! 'v001', nil
+      v = d.version! 'v001', nil
       d.info = args[:info] || DEFAULT_PROPERTIES
       d
     end
@@ -68,15 +68,16 @@ module Dflat
           FileUtils.cp_r current.path, File.join(path, dest)
 	else
           new_version(dest)
+	  self.current = dest
 	end
       end
 
-      self.current = dest
       unlock
       return version(dest)
     end
 
     def current= version
+      version = version.version if version.respond_to? :version
       return false unless File.directory? File.join(path, version)
       File.open(File.join(path, 'current.txt'), 'w') { |f| f.write(version) }
       @current = version
