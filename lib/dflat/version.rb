@@ -8,7 +8,10 @@ module Dflat
       include LockIt::Mixin
      
       def self.load path
-        Full.new path
+        d = Dir.new path
+        return Full.new path if d.entries.any? { |f| f =~ /full/ }
+        return Delta.new path if types.any? { |t| t[:name] =~ /redd/i }
+	return Empty.new path
       end
 
       def version
@@ -41,15 +44,12 @@ module Dflat
     end
 
     class Full < Dir
-      include Namaste::Mixin
-      include LockIt::Mixin
-
       DATA_DIR = 'full'
 
       def self.mkdir path, integer = 0777, args = {}
         super path, integer
 	d = Full.new path
-	Dnatural::Dir.mkdir File.join(d.path, 'full')
+	Dnatural::Dir.mkdir File.join(d.path, DATA_DIR)
         d
       end
 
@@ -94,7 +94,35 @@ module Dflat
       def manifest_path
         File.join(path, 'manifest.txt')
       end
+    end
+    class Delta < Dir
+      DATA_DIR = 'delta'
 
+      def self.mkdir path, integer = 0777, args = {}
+        super path, integer
+	d = Delta.new path
+	ReDD::Dir.mkdir File.join(d.path, DATA_DIR)
+        d
+      end
+
+      def add *args
+        throw NoMethodError
+      end
+
+      def remove *args
+        throw NoMethodError
+      end
+
+      private
+      def data_path
+        File.join(self.path, DATA_DIR)
+      end
+      def dmanifest_path
+        File.join(path, 'd-manifest.txt')
+      end
+      def manifest_path
+        File.join(path, 'manifest.txt')
+      end
     end
   end
 end
