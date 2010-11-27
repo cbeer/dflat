@@ -19,8 +19,8 @@ module Dflat
       ::Dir.mkdir path, integer
       d = Home.new path
       d.type = Dflat::VERSION
-      v = d.version! 'v001', nil
       d.info = args[:info] || DEFAULT_PROPERTIES
+      d.init
       d
     end
 
@@ -53,33 +53,59 @@ module Dflat
       version(v)
     end
 
+    def next
+      v = next_version
+      version(v) if File.exists? File.join(path, v)
+    end
+
     def version version
       # xxx use namaste 'type' to load the right dir..
       Dflat::Version::Dir.load File.join(path, version)
     end
 
-    def version! dest = nil, src = nil
-      lock
-      dest ||= next_version
-      if src
-        FileUtils.cp_r File.join(path, src), File.join(path, dest)
-      else
-	if current_version
-          FileUtils.cp_r current.path, File.join(path, dest)
-	else
-          new_version(dest)
-	  self.current = dest
-	end
-      end
+    def init
+      new_version('v001')
+      self.current = 'v001'
+    end
 
+    def checkout
+      lock
+      if current_version and not File.exists?  File.join(path, next_version)
+	FileUtils.cp_r current.path, File.join(path, next_version)
+      end
       unlock
-      return version(dest)
+      return version(next_version)
+    end
+
+    def commit args = {}
+      lock
+      v = self.current = version(next_version)
+      unlock
+      v
+    end
+
+    def commit!
+      lock
+      # xxx full -> redd?
+      v = self.current = version(next_version)
+      unlock
+      v
+    end
+
+    def export version
+      v = version(version)
+      return v if v.instance_of? Dflat::Version::Full
+    end
+
+    def [] version
+      export(version)
     end
 
     def current= version
       version = version.version if version.respond_to? :version
       return false unless File.directory? File.join(path, version)
       File.open(File.join(path, 'current.txt'), 'w') { |f| f.write(version) }
+
       @current = version
     end
 
@@ -91,6 +117,7 @@ module Dflat
       d = Dflat::Version::Dir.new path
       d.select &block
     end
+
     private
     def new_version version
       d = Dflat::Version::Full.mkdir File.join(path, version)
@@ -101,7 +128,11 @@ module Dflat
     end
 
     def next_version
-      "v%03d" % (self.versions.map { |x| File.basename(x).sub(/^v/, '').to_i }.max + 1)
+      "v%03d" % (current_version.sub(/^v/, '').to_i + 1)
+    end
+
+    def update_directory_delta from, to = current
+     
     end
   end
 end

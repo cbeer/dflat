@@ -59,14 +59,14 @@ class TestDflat < Test::Unit::TestCase
     end
 
     should "do basic dnatural versioning" do
-      version = @dflat.version!
+      version = @dflat.checkout
 
       assert_equal(@dflat.current.version, 'v001')
       assert_equal(open(File.join(@dflat.path, 'current.txt')).read, 'v001')
+                  
+      @dflat.commit
 
-      @dflat.current = version
-
-      assert_equal(File.basename(version.path), 'v002')
+      assert_equal(version.version, 'v002')
       assert_equal(open(File.join(@dflat.path, 'current.txt')).read, 'v002')
     end
   end
