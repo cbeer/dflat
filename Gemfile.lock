@@ -2,7 +2,7 @@ GEM
   remote: http://rubygems.org/
   specs:
     anvl (0.1.0)
-    checkm (0.0.3)
+    checkm (0.0.4)
     git (1.2.5)
     i18n (0.4.1)
     jeweler (1.5.1)
