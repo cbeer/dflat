@@ -69,5 +69,47 @@ class TestDflat < Test::Unit::TestCase
       assert_equal(version.version, 'v002')
       assert_equal(open(File.join(@dflat.path, 'current.txt')).read, 'v002')
     end
+
+    should "handle ReDD versioning" do
+
+      previous = @dflat.current
+      version = @dflat.checkout
+      @dflat.commit!
+      
+      assert(File.exists? File.join(previous.path, 'delta'))
+    end
+
+    should "handle ReDD adds" do
+
+      previous = @dflat.current
+      version = @dflat.checkout
+      version.add 'LICENSE.txt', 'producer/abcdef'
+      @dflat.commit!
+      
+      assert(File.exists? File.join(previous.path, 'delta'))
+      assert_equal(open(File.join(previous.path, 'delta', 'delete.txt')).read, 'producer/abcdef')
+    end
+
+    should "handle ReDD removes" do
+      previous = @dflat.current
+      previous.add 'LICENSE.txt', 'producer/abcdef'
+      version = @dflat.checkout
+      version.remove 'producer/abcdef'
+      @dflat.commit!
+      
+      assert(File.exists? File.join(previous.path, 'delta', 'add', 'producer', 'abcdef'))
+    end
+
+    should "handle ReDD modifies" do
+      previous = @dflat.current
+      previous.add 'LICENSE.txt', 'producer/abcdef'
+      version = @dflat.checkout
+      version.add 'README.rdoc', 'producer/abcdef'
+      @dflat.commit!
+      
+      assert(File.exists? File.join(previous.path, 'delta', 'add', 'producer', 'abcdef'))
+      assert_equal(open(File.join(previous.path, 'delta', 'delete.txt')).read, 'producer/abcdef')
+    end
+
   end
 end

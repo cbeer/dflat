@@ -24,11 +24,16 @@ module ReDD
     end
 
     def add src, dest, options = {}
-      NoMethodError
+      FileUtils.mkdir_p File.dirname(File.join(path, 'add', dest))
+      file = FileUtils.cp src, File.join(path, 'add', dest), options
+      File.new File.join(path, 'add', dest)
     end
 
     def remove list, options = {}
-      NoMethodError
+      list = [list] if list.instance_of? String
+      File.open(File.join(path, 'delete.txt'), 'w') do |f|
+        f.write list.join("\n")
+      end
     end
   end
 end

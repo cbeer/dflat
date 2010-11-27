@@ -87,7 +87,11 @@ module Dflat
     def commit!
       lock
       # xxx full -> redd?
+      previous = current
       v = self.current = version(next_version)
+
+      previous.to_delta(current)
+
       unlock
       v
     end
