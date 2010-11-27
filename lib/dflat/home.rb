@@ -16,7 +16,7 @@ module Dflat
 			   :classScheme => 'CLOP/0.3' }
 
     def self.mkdir path, integer=0777, args = {}
-      Dir.mkdir path, integer
+      ::Dir.mkdir path, integer
       d = Home.new path
       d.type = Dflat::VERSION
       v = d.version! 'v001', nil
@@ -55,7 +55,7 @@ module Dflat
 
     def version version
       # xxx use namaste 'type' to load the right dir..
-      Dnatural::Dir.new File.join(path, version)
+      Dflat::Version::Dir.load File.join(path, version)
     end
 
     def version! dest = nil, src = nil
@@ -88,12 +88,12 @@ module Dflat
     end
 
     def select &block
-      d = Dir.new path
+      d = Dflat::Version::Dir.new path
       d.select &block
     end
     private
     def new_version version
-      d = Dnatural::Dir.mkdir File.join(path, version)
+      d = Dflat::Version::Full.mkdir File.join(path, version)
     end
 
     def current_version

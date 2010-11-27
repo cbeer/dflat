@@ -20,7 +20,7 @@ class TestDflat < Test::Unit::TestCase
       assert_contains(files, 'current.txt')
       assert_contains(files, 'dflat-info.txt')
       assert_contains(files, 'v001')
-      assert_contains(files, 'v001/0=dnatural_0.17')
+      assert_contains(files, 'v001/full/0=dnatural_0.17')
     end
 
     should "point to versioned content" do
